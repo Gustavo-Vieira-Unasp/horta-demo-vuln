@@ -8,7 +8,7 @@ load_dotenv()
 
 # 1º Argumento: Busca os valores das variaveis de ambiente. 
 # 2º Argumento: Fallback
-# Coloque o nome exado de como deixou no .env
+# Coloque o nome exado de como deixou no .env entre aspas
 AWS_ACESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "default_key")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "default_secret")
 
