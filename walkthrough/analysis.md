@@ -1,4 +1,4 @@
-# Passos tomados para resolver debilidades
+# Identificação & Análise
 
 Meu walkthrough para a atividade `horta-demo-vuln` de Engenharia de Software.
 
