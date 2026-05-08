@@ -1,13 +1,19 @@
-"""Configuração da API demo. NAO USE EM PRODUCAO."""
+import os
+from dotenv import load_dotenv
 
-# Vulnerabilidade plantada: secret hardcoded.
-# Detectado por Semgrep (regra hardcoded-aws-key), Trivy (--scanners secret)
-# e GitLeaks. Em codigo real, sempre via variavel de ambiente ou secret manager.
-AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
-AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+# Carrega as variáveis do .env pra cá
+load_dotenv()
+
+"""Configuração da API demo. Agora protegidas."""
+
+# 1º Argumento: Busca os valores das variaveis de ambiente. 
+# 2º Argumento: Fallback
+# Coloque o nome exado de como deixou no .env
+AWS_ACESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "default_key")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "default_secret")
 
 # Conexao com BD local (sqlite para o lab).
-DATABASE_URL = "sqlite:///./horta_demo.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./default.db")
 
-# Token "interno" hardcoded (segundo secret plantado).
-INTERNAL_API_TOKEN = "ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789"
+# Token "interno" (agora não mais) hardcoded (segundo secret plantado).
+INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN")
