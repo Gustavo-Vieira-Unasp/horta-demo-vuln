@@ -1,3 +1,8 @@
+# config.py
+
+Sendo apenas um arquivo mock, farei com que seja possível ver o arquivo antigo de forma fácil
+
+```python
 """
 horta-demo-vuln — API FastAPI didatica com vulnerabilidades plantadas.
 
@@ -26,32 +31,29 @@ engine = create_engine(DATABASE_URL)
 @app.on_event("startup")
 def _setup() -> None:
     with engine.begin() as conn:
-        # Adicionado nosemgrep aqui pois o SQL é estático e seguro.
         conn.execute(text(
             "CREATE TABLE IF NOT EXISTS leituras ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
             "device_id TEXT, sensor TEXT, valor REAL, ts TEXT)"
-        )) # nosemgrep
+        ))
 
 
 @app.get("/leituras")
 def listar_leituras(sensor: str | None = None) -> list[dict]:
     """Lista leituras filtradas por sensor.
 
-    (Não mais) VULNERÁVEL a SQL injection: o parametro `sensor` e concatenado
+    VULNERAVEL a SQL injection: o parametro `sensor` e concatenado
     direto na query. Semgrep flagga regra python.lang.security.audit.sql-concat
     (ou equivalente). Triagem esperada: corrigir (parametrizar).
     """
-    from sqlalchemy import text as sql_text
-    
+    base = "SELECT id, device_id, sensor, valor, ts FROM leituras"
     if sensor:
-        query = sql_text("SELECT id, device_id, sensor, valor, ts FROM leituras WHERE sensor = :sensor")  # nosemgrep
-        params = {"sensor": sensor}
+        # Vulnerabilidade ()plantada: string concat com input externo.
+        query = base + " WHERE sensor = '" + sensor + "'"
     else:
-        query = sql_text("SELECT id, device_id, sensor, valor, ts FROM leituras")  # nosemgrep
-        params = {}
+        query = base
     with engine.begin() as conn:
-        rows = conn.execute(query, params).fetchall()
+        rows = conn.execute(text(query)).fetchall()
     return [
         {"id": r[0], "device_id": r[1], "sensor": r[2], "valor": r[3], "ts": r[4]}
         for r in rows
@@ -66,14 +68,10 @@ def criar_leitura(payload: dict) -> dict:
     valor = float(payload.get("valor", 0))
     ts = datetime.utcnow().isoformat()
     with engine.begin() as conn:
-        # Troque f-string por parâmetros :nome para eliminar a vulnerabilidade real.
-        conn.execute(
-            text(
-                "INSERT INTO leituras (device_id, sensor, valor, ts) "
-                "VALUES (:device_id, :sensor, :valor, :ts)"
-            ),  # nosemgrep
-            {"device_id": device_id, "sensor": sensor, "valor": valor, "ts": ts}
-        )
+        conn.execute(text(
+            "INSERT INTO leituras (device_id, sensor, valor, ts) "
+            f"VALUES ('{device_id}', '{sensor}', {valor}, '{ts}')"
+        ))
     return {"status": "ok", "device_id": device_id, "sensor": sensor}
 
 
@@ -85,7 +83,7 @@ def acionar_irrigacao(payload: dict) -> dict:
         "zona": zona,
         "status": "acionado",
         # Eco do secret (mais um padrao que GitLeaks vai pegar em log).
-        "trace_id": f"req-{datetime.now().timestamp()}",
+        "trace_id": f"req-{AWS_ACCESS_KEY_ID[:6]}",
     }
 
 
@@ -96,3 +94,5 @@ def health() -> dict[str, str]:
 
 # Uso "fantasma" do secret para garantir que nao seja removido como dead code.
 _DEBUG_KEY = AWS_SECRET_ACCESS_KEY[:4]
+
+```
